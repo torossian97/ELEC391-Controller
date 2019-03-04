@@ -28,22 +28,6 @@ void loop() {
 void wind_callback(int index, int v, int up){
   voltage = v * (5.0 / 1023.0);
 
-  if(!(2.09 <= voltage && voltage <= 2.15)){
-      if(voltage < 2.12){
-          duty += 0.01;
-        }else{
-            duty -= 0.01;
-        }
-        OCR2B = freq*duty;
-    }
-}
-
-ISR(TIMER1_OVF_vect){
-   state = !state;
-   digitalWrite(ledPin, state);
-   
-  voltage = analogRead(A5) * (5.0 / 1023.0);
-  
   if(!(VOLT_LOW <= voltage && voltage <= VOLT_HIGH)){
       if(voltage < VOLT_CENTER){
           duty += 0.01;
@@ -52,8 +36,6 @@ ISR(TIMER1_OVF_vect){
         }
         OCR2B = freq*duty;
     }
-   
-   Serial.println(voltage);
 }
 
 
