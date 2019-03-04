@@ -14,8 +14,25 @@ Atm_analog wind_sensor;
 
 void setup() {
 
+  ///////////////////////////////////////PWM setup//////////////////////////////////////
+  pinMode(3, OUTPUT); // output pin for OCR2B
+  pinMode(5, OUTPUT); // output pin for OCR0B
+
+  pinMode(ledPin, OUTPUT);
+  //SETUP TIMER1 for interrupt to control Boost Converter
+  TIMSK1 = (TIMSK1 & B11111110) | 0x01;
+  TCCR1B = (TCCR1B & B11111000) | 0x05;
+
+  // Set up the 250KHz output
+  TCCR2A = _BV(COM2A1) | _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
+  TCCR2B = _BV(WGM22) | _BV(CS20);
+  OCR2A = freq;
+  OCR2B = freq*duty;
+
+  ////////////////////////////////////Stepper setup////////////////////////////////////
   myStepper.setSpeed(0); 
 
+  ////////////////////////////////Automaton callbacks//////////////////////////////////
   wind_sensor.begin( A0, 50 )
     .onChange( wind_callback, 3 ); // Toggle the led when button pressed
 
