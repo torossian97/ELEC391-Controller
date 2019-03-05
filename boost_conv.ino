@@ -1,8 +1,6 @@
 #include <Automaton.h>
 #include <Stepper.h>
 
-Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);  // Pin inversion to make the library work
-
 ///////////////////////////////////Calibration values///////////////////////////////////
 const float VOLT_CENTER = 2.12;
 const float VOLT_LOW = 2.09;
@@ -13,6 +11,9 @@ const float DEG_RATIO = 360/STEPS_PER_REV;
 const int STEPPER_SPEED = 10;
 
 float last_deg = POT_ANGLE/2;
+float freq = 100;
+float duty = 0.5;
+Stepper myStepper(STEPS_PER_REV, 8, 10, 9, 11);  // Pin inversion to make the library work
 
 /////////////////////////////////////Analog FSMs////////////////////////////////////////
 Atm_analog PWM_control;
@@ -24,7 +25,6 @@ void setup() {
   pinMode(3, OUTPUT); // output pin for OCR2B
   pinMode(5, OUTPUT); // output pin for OCR0B
 
-  pinMode(ledPin, OUTPUT);
   //SETUP TIMER1 for interrupt to control Boost Converter
   TIMSK1 = (TIMSK1 & B11111110) | 0x01;
   TCCR1B = (TCCR1B & B11111000) | 0x05;
@@ -51,8 +51,9 @@ void loop() {
   automaton.run();
 }
 
+//callback function to keep boost converter outputting at 12 Volts
 void PWM_callback(int index, float v, int up){
-  voltage = v * (5.0 / 1023.0);
+  float voltage = v * (5.0 / 1023.0);
 
   if(!(VOLT_LOW <= voltage && voltage <= VOLT_HIGH)){
       if(voltage < VOLT_CENTER){
@@ -64,21 +65,21 @@ void PWM_callback(int index, float v, int up){
     }
 }
 
+//callback to keep the motor lined up with the wind vane
 void wind_callback(int index, int v, int up){
   float voltage = v * (3.3 / 1023.0);
   
   int degree = getDegrees(voltage);
-  int steps = (degree - last_degree) * DEG_RATIO;
+  int steps = (degree - last_deg) * DEG_RATIO;
 
   myStepper.step(steps);
-  last_degree = degree;
+  last_deg = degree;
 }
 
+//quick function to get degrees from a voltage supplied by 3.3 volts
 int getDegrees(float v)
 {
-    int sensor_value = v;
-
-    float degree = (voltage * POT_ANGLE) / 3.3; 
+    float degree = (v * POT_ANGLE) / 3.3; 
     return degree;
 }
 
